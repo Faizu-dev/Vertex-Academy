@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { IngestionFileItem } from '../types';
 import { ViewChunksModal } from '../components/ViewChunksModal';
 import { TrailerModal } from '../components/TrailerModal';
+import { GoogleTableRowSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
 
 interface StudioViewProps {
   onNavigateToPlayer?: () => void;
@@ -16,7 +17,9 @@ export const StudioView: React.FC<StudioViewProps> = ({
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isSyncingRegistry, setIsSyncingRegistry] = useState(false);
   const [publishSuccess, setPublishSuccess] = useState(false);
+
   const [isDragging, setIsDragging] = useState(false);
   const [sampleConfirmed, setSampleConfirmed] = useState(false);
 
@@ -167,9 +170,8 @@ export const StudioView: React.FC<StudioViewProps> = ({
     link.click();
     document.body.removeChild(link);
   };
-
   return (
-    <div className="flex flex-col w-full p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="flex flex-col w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-[1560px] mx-auto">
       {/* GEMINI AURORA HERO BANNER */}
       <section className="relative overflow-hidden rounded-3xl p-6 lg:p-9 text-white shadow-lg bg-gradient-to-r from-[#1a73e8] via-[#7C3AED] via-[#D96570] to-[#FBBC04]">
         {/* Ambient atmospheric glow orbs */}
@@ -546,6 +548,23 @@ export const StudioView: React.FC<StudioViewProps> = ({
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                setIsSyncingRegistry(true);
+                setTimeout(() => setIsSyncingRegistry(false), 1200);
+              }}
+              disabled={isSyncingRegistry}
+              className="h-9 px-3.5 rounded-full bg-white hover:bg-[#e8f0fe] text-[#1a73e8] text-xs font-semibold flex items-center gap-1.5 transition-colors border border-[#c2e7ff] shadow-2xs"
+              title="Sync Vector Search Index"
+            >
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4285F4] google-dot-pulse"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#EA4335] google-dot-pulse" style={{ animationDelay: '150ms' }}></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FBBC04] google-dot-pulse" style={{ animationDelay: '300ms' }}></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#34A853] google-dot-pulse" style={{ animationDelay: '450ms' }}></span>
+              </div>
+              <span>{isSyncingRegistry ? 'Syncing...' : 'Sync Index'}</span>
+            </button>
             <span className="px-3 py-1 rounded-full bg-[#f1f3f4] text-xs text-[#5f6368] font-semibold border border-[#dadce0]">
               24 Files • 18,420 Vectors
             </span>
@@ -579,6 +598,9 @@ export const StudioView: React.FC<StudioViewProps> = ({
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
+            {isSyncingRegistry ? (
+              <GoogleTableRowSkeleton count={4} vibrant={true} />
+            ) : (
             <tbody className="divide-y divide-[#f1f3f4] text-[#202124]">
               {registryItems.map((item) => (
                 <tr key={item.id} className="hover:bg-[#f8fafd] transition-colors">
@@ -648,6 +670,7 @@ export const StudioView: React.FC<StudioViewProps> = ({
                 </tr>
               ))}
             </tbody>
+            )}
           </table>
         </div>
       </section>

@@ -310,56 +310,56 @@ export const ThreeAvatar: React.FC<ThreeAvatarProps> = ({
   return (
     <div className={`relative w-full rounded-2xl overflow-hidden flex flex-col bg-[#0b0f19] ${className}`}>
       {/* Top Avatar Mode Switcher Bar */}
-      <div className="z-20 p-2.5 bg-black/60 backdrop-blur-md border-b border-white/10 flex items-center justify-between gap-1 flex-wrap">
-        <div className="flex items-center gap-1">
+      <div className="z-20 px-2.5 py-2 bg-black/70 backdrop-blur-md border-b border-white/10 flex items-center justify-between gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setAvatarMode('neural-human')}
-            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 transition-all shrink-0 ${
               avatarMode === 'neural-human'
                 ? 'bg-[#1a73e8] text-white shadow-xs'
                 : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
             title="Photorealistic AI Human (HeyGen / Tavus Neural Video Feed)"
           >
-            <span className="material-symbols-outlined text-[16px]">videocam</span>
-            <span>Realistic Human</span>
+            <span className="material-symbols-outlined text-[15px]">videocam</span>
+            <span>Realistic</span>
           </button>
 
           <button
             onClick={() => setAvatarMode('ready-player-me')}
-            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 transition-all shrink-0 ${
               avatarMode === 'ready-player-me'
                 ? 'bg-[#7C3AED] text-white shadow-xs'
                 : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
             title="Ready Player Me 3D Avatar (Three.js WebGL)"
           >
-            <span className="material-symbols-outlined text-[16px]">view_in_ar</span>
-            <span>Ready Player Me 3D</span>
+            <span className="material-symbols-outlined text-[15px]">view_in_ar</span>
+            <span>3D RPM</span>
           </button>
 
           <button
             onClick={() => setAvatarMode('gemini-hologram')}
-            className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 transition-all ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1 transition-all shrink-0 ${
               avatarMode === 'gemini-hologram'
                 ? 'bg-[#34A853] text-white shadow-xs'
                 : 'text-white/70 hover:text-white hover:bg-white/10'
             }`}
             title="Vertex AI Holographic Core"
           >
-            <span className="material-symbols-outlined text-[16px]">neurology</span>
-            <span>Hologram</span>
+            <span className="material-symbols-outlined text-[15px]">neurology</span>
+            <span>Holo</span>
           </button>
         </div>
 
         {/* Integration Guide Button */}
         <button
           onClick={() => setIsIntegrationsModalOpen(true)}
-          className="px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-semibold flex items-center gap-1 transition-colors"
+          className="px-2 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-bold flex items-center gap-1 transition-colors shrink-0"
           title="See how to pull avatars from Ready Player Me, HeyGen, or Tavus"
         >
-          <span className="material-symbols-outlined text-[14px] text-[#FBBC04]">info</span>
-          <span>Avatar Services</span>
+          <span className="material-symbols-outlined text-[13px] text-[#FBBC04]">info</span>
+          <span>Services</span>
         </button>
       </div>
 

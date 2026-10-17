@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CourseItem } from '../types';
 import { TrailerModal } from '../components/TrailerModal';
+import { GoogleCardSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
 
 interface DiscoveryViewProps {
   onSelectCourse: (courseId: string) => void;
@@ -15,6 +16,8 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
   const [searchPrompt, setSearchPrompt] = useState('');
   const [selectedTrailerTitle, setSelectedTrailerTitle] = useState<string | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
 
   // Curated Courses matching the mockup exactly
   const [courses, setCourses] = useState<CourseItem[]>([
@@ -159,9 +162,8 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
     activeCategory === 'All Courses'
       ? courses
       : courses.filter((c) => c.category === activeCategory || c.badge.includes(activeCategory));
-
   return (
-    <div className="w-full px-6 lg:px-8 py-8 max-w-[1440px] mx-auto space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 max-w-[1560px] mx-auto space-y-8">
       {/* Hero / Title & Intelligent Synthesis Prompt Engine */}
       <section className="space-y-6">
         {/* Gemini Aurora Header Card */}
@@ -236,7 +238,11 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
           ].map((cat) => (
             <button
               key={cat}
-              onClick={() => setActiveCategory(cat)}
+              onClick={() => {
+                setActiveCategory(cat);
+                setIsFetching(true);
+                setTimeout(() => setIsFetching(false), 650);
+              }}
               className={`shrink-0 h-9 px-4 rounded-full text-xs font-semibold shadow-2xs flex items-center gap-1.5 transition-all ${
                 activeCategory === cat
                   ? 'bg-[#1a73e8] text-white shadow-xs'
@@ -294,7 +300,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       </section>
 
       {/* Course Grid Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-[#1f1f1f] flex items-center gap-2">
             <span>Curated AI Engineering Curriculums</span>
@@ -304,14 +310,39 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
             Production-grade courses synthesized and verified by Google Cloud instructional agents
           </p>
         </div>
-        <div className="text-xs text-[#5f6368] font-medium">
-          <span>Showing {filteredCourses.length} of {courses.length} Modules</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setIsFetching(true);
+              setTimeout(() => setIsFetching(false), 1200);
+            }}
+            disabled={isFetching}
+            className="h-8 px-3 rounded-full bg-white hover:bg-[#e8f0fe] text-[#1a73e8] border border-[#c2e7ff] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs"
+            title="Fetch latest course modules from Vertex AI"
+          >
+            <div className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#4285F4] google-dot-pulse"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#EA4335] google-dot-pulse" style={{ animationDelay: '150ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FBBC04] google-dot-pulse" style={{ animationDelay: '300ms' }}></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#34A853] google-dot-pulse" style={{ animationDelay: '450ms' }}></span>
+            </div>
+            <span>{isFetching ? 'Fetching from Vertex AI...' : 'Fetch Modules'}</span>
+          </button>
+          <div className="text-xs text-[#5f6368] font-medium hidden sm:block">
+            <span>Showing {filteredCourses.length} of {courses.length} Modules</span>
+          </div>
         </div>
       </div>
 
-      {/* Course Grid - 3x2 Card Layout */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
+      {/* Course Grid or Google Skeleton Loading State */}
+      {isFetching ? (
+        <div className="space-y-4">
+          <GoogleLoadingIndicator message="Fetching adaptive curriculums from Vertex AI..." />
+          <GoogleCardSkeleton count={filteredCourses.length || 6} vibrant={true} />
+        </div>
+      ) : (
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCourses.map((course) => (
           <article
             key={course.id}
             className="glass-card glass-card-hover rounded-3xl transition-all flex flex-col group overflow-hidden border border-[#e3e8f5]"
@@ -400,6 +431,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
           </article>
         ))}
       </section>
+      )}
 
       {/* Bottom Learning Pathway CTA Banner */}
       <section className="relative rounded-3xl glass-card p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden border border-[#e3e8f5]">

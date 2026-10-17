@@ -88,9 +88,8 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
     element.click();
     document.body.removeChild(element);
   };
-
   return (
-    <div className="relative w-full overflow-hidden px-6 lg:px-8 py-6 max-w-[1680px] mx-auto space-y-6">
+    <div className="relative w-full overflow-hidden px-4 sm:px-6 lg:px-8 py-6 max-w-[1560px] mx-auto space-y-6">
       {/* GEMINI AURORA HEADER */}
       <section className="relative overflow-hidden rounded-3xl p-6 lg:p-8 text-white shadow-lg bg-gradient-to-r from-[#1a73e8] via-[#7C3AED] via-[#D96570] to-[#FBBC04]">
         <div className="pointer-events-none absolute -right-16 -top-20 h-80 w-80 rounded-full bg-white/20 blur-3xl"></div>
@@ -134,7 +133,7 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
       {/* Main 2-Column Responsive Workspace Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* COLUMN 1: AI Oral Examination Interactive Sandbox (7 Cols) */}
-        <section className="lg:col-span-7 flex flex-col gap-4">
+        <section className="lg:col-span-7 min-w-0 flex flex-col gap-4">
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#e3e2e6]/50 flex flex-col gap-4">
             {/* Session Info Bar */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#efedf1]">
@@ -374,7 +373,7 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
         </section>
 
         {/* COLUMN 2: Unlocked Dynamic Certificate of Completion (5 Cols) */}
-        <section className="lg:col-span-5 flex flex-col gap-4">
+        <section className="lg:col-span-5 min-w-0 flex flex-col gap-4">
           {/* Celebratory Congratulatory Header Card */}
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#e3e2e6]/50 relative overflow-hidden flex flex-col gap-2">
             <div className="flex items-center justify-between">

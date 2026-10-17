@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SkillNode } from '../types';
 import { CodeSandboxModal } from '../components/CodeSandboxModal';
+import { GoogleMetricSkeleton, GoogleGraphSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
 
 interface AnalyticsViewProps {
   onNavigateToPlayer?: () => void;
@@ -14,6 +15,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [selectedDomain, setSelectedDomain] = useState<'all' | 'vectors' | 'agentic' | 'infra'>('all');
   const [isSandboxOpen, setIsSandboxOpen] = useState(false);
   const [copiedTranscript, setCopiedTranscript] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
 
   const nodes: SkillNode[] = [
     {
@@ -161,7 +164,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   };
 
   return (
-    <div className="w-full px-6 lg:px-8 py-6 max-w-[1600px] mx-auto space-y-8">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 max-w-[1560px] mx-auto space-y-8">
       {/* GEMINI AURORA HEADER */}
       <section className="relative overflow-hidden rounded-3xl p-6 lg:p-8 text-white shadow-lg bg-gradient-to-r from-[#1a73e8] via-[#7C3AED] via-[#D96570] to-[#FBBC04]">
         <div className="pointer-events-none absolute -right-16 -top-20 h-80 w-80 rounded-full bg-white/20 blur-3xl"></div>
@@ -185,6 +188,24 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
           {/* Controls & Quick Status */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => {
+                setIsRefreshing(true);
+                setTimeout(() => setIsRefreshing(false), 1200);
+              }}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md text-white border border-white/20 text-xs font-semibold transition-all shadow-xs"
+              title="Fetch latest telemetry from Vertex AI"
+            >
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4285F4] google-dot-pulse"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#EA4335] google-dot-pulse" style={{ animationDelay: '150ms' }}></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FBBC04] google-dot-pulse" style={{ animationDelay: '300ms' }}></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[#34A853] google-dot-pulse" style={{ animationDelay: '450ms' }}></span>
+              </div>
+              <span>{isRefreshing ? 'Syncing...' : 'Sync Telemetry'}</span>
+            </button>
+
             <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/25 backdrop-blur-md text-white border border-white/20 text-xs font-semibold">
               <span className="w-2.5 h-2.5 rounded-full bg-[#34A853] animate-pulse"></span>
               <span>Weekly Retention: 94%</span>
@@ -200,8 +221,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
       </section>
 
-      {/* METRIC BANNER (4 Google-Colored KPI Metric Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      {/* METRIC BANNER (4 Google-Colored KPI Metric Cards or Skeleton) */}
+      {isRefreshing ? (
+        <div className="space-y-4">
+          <GoogleLoadingIndicator message="Fetching telemetry metrics from Vertex AI cluster..." />
+          <GoogleMetricSkeleton count={4} vibrant={true} />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Card 1: Google Blue (#4285F4) - Courses Enrolled */}
         <div className="rounded-3xl glass-card p-6 shadow-sm border-t-4 border-t-[#4285F4] flex flex-col justify-between">
           <div className="flex items-start justify-between">
@@ -302,6 +329,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
         </div>
       </div>
+      )}
 
       {/* CENTERPIECE: GEMINI AUTONOMOUS KNOWLEDGE GRAPH */}
       <div className="rounded-3xl glass-card p-6 shadow-sm border border-[#e3e8f5] space-y-4">
@@ -348,49 +376,52 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         {/* Graph Viewport + Inspector Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
           {/* Interactive Node Graph Viewport (8 Cols) */}
-          <div className="lg:col-span-8 bg-[#f4f3f7] rounded-2xl p-4 relative min-h-[460px] overflow-hidden flex flex-col justify-between border border-[#e3e2e6]/60">
+          <div className="lg:col-span-8 bg-[#f4f3f7] rounded-3xl p-4 relative min-h-[460px] overflow-hidden flex flex-col justify-between border border-[#e3e8f5]">
             {/* Legend Bar */}
             <div className="flex items-center gap-4 bg-white/90 backdrop-blur-xs px-4 py-2 rounded-full self-start shadow-xs z-10 text-xs">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#006d3a]"></span>
-                <span className="text-[#1a1b1e] font-medium">Mastered (100%)</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#34A853]"></span>
+                <span className="text-[#1f1f1f] font-semibold">Mastered (100%)</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#005bbf] animate-pulse"></span>
-                <span className="text-[#1a1b1e] font-medium">In Progress</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#4285F4] animate-pulse"></span>
+                <span className="text-[#1f1f1f] font-semibold">In Progress</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#c1c6d6]"></span>
-                <span className="text-[#1a1b1e] font-medium">Recommended Next</span>
+                <span className="text-[#1f1f1f] font-medium">Recommended Next</span>
               </div>
             </div>
 
-            {/* SVG Visual Topology Connections Background */}
-            <div className="absolute inset-0 pointer-events-none">
-              <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="edgeGradMastered" x1="0%" x2="100%" y1="0%" y2="0%">
-                    <stop offset="0%" stopColor="#006d3a" stopOpacity="0.6"></stop>
-                    <stop offset="100%" stopColor="#006d3a" stopOpacity="0.8"></stop>
-                  </linearGradient>
-                  <linearGradient id="edgeGradActive" x1="0%" x2="100%" y1="0%" y2="100%">
-                    <stop offset="0%" stopColor="#006d3a" stopOpacity="0.8"></stop>
-                    <stop offset="100%" stopColor="#005bbf" stopOpacity="0.9"></stop>
-                  </linearGradient>
-                </defs>
-                {/* Connection Bezier Curves */}
-                <path d="M 120 70 C 180 70, 240 120, 290 120" fill="none" stroke="#adc7ff" strokeDasharray="4 4" strokeWidth="2"></path>
-                <path d="M 140 240 C 190 240, 210 240, 250 240" fill="none" stroke="url(#edgeGradMastered)" strokeWidth="3"></path>
-                <path d="M 370 240 C 410 240, 420 190, 450 190" fill="none" stroke="url(#edgeGradMastered)" strokeWidth="3"></path>
-                <path d="M 540 190 C 580 190, 590 150, 640 150" fill="none" stroke="url(#edgeGradActive)" strokeWidth="3"></path>
-                <path d="M 740 150 C 780 150, 790 90, 830 90" fill="none" stroke="#727785" strokeDasharray="4 4" strokeWidth="2"></path>
-                <path d="M 540 190 C 580 190, 590 290, 640 290" fill="none" stroke="#adc7ff" strokeWidth="2"></path>
-                <path d="M 740 150 C 780 150, 790 270, 830 270" fill="none" stroke="#727785" strokeDasharray="4 4" strokeWidth="2"></path>
-              </svg>
-            </div>
+            {/* Scrollable Graph Canvas Wrapper to prevent clipping on expand/resize */}
+            <div className="w-full overflow-x-auto overflow-y-hidden py-2 scrollbar-thin">
+              <div className="relative min-w-[920px] h-[380px]">
+                {/* SVG Visual Topology Connections Background */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <linearGradient id="edgeGradMastered" x1="0%" x2="100%" y1="0%" y2="0%">
+                        <stop offset="0%" stopColor="#34A853" stopOpacity="0.6"></stop>
+                        <stop offset="100%" stopColor="#34A853" stopOpacity="0.8"></stop>
+                      </linearGradient>
+                      <linearGradient id="edgeGradActive" x1="0%" x2="100%" y1="0%" y2="100%">
+                        <stop offset="0%" stopColor="#34A853" stopOpacity="0.8"></stop>
+                        <stop offset="100%" stopColor="#4285F4" stopOpacity="0.9"></stop>
+                      </linearGradient>
+                    </defs>
+                    {/* Connection Bezier Curves */}
+                    <path d="M 120 70 C 180 70, 240 120, 290 120" fill="none" stroke="#adc7ff" strokeDasharray="4 4" strokeWidth="2"></path>
+                    <path d="M 140 240 C 190 240, 210 240, 250 240" fill="none" stroke="url(#edgeGradMastered)" strokeWidth="3"></path>
+                    <path d="M 370 240 C 410 240, 420 190, 450 190" fill="none" stroke="url(#edgeGradMastered)" strokeWidth="3"></path>
+                    <path d="M 540 190 C 580 190, 590 150, 640 150" fill="none" stroke="url(#edgeGradActive)" strokeWidth="3"></path>
+                    <path d="M 740 150 C 780 150, 790 90, 830 90" fill="none" stroke="#727785" strokeDasharray="4 4" strokeWidth="2"></path>
+                    <path d="M 540 190 C 580 190, 590 290, 640 290" fill="none" stroke="#adc7ff" strokeWidth="2"></path>
+                    <path d="M 740 150 C 780 150, 790 270, 830 270" fill="none" stroke="#727785" strokeDasharray="4 4" strokeWidth="2"></path>
+                  </svg>
+                </div>
 
-            {/* Interactive Nodes Layer */}
-            <div className="relative w-full h-[380px] z-10">
+                {/* Interactive Nodes Layer */}
+                <div className="relative w-full h-full z-10">
               {nodes
                 .filter((n) => selectedDomain === 'all' || n.category === selectedDomain)
                 .map((node) => {
@@ -468,6 +499,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                     </div>
                   );
                 })}
+            </div>
+              </div>
             </div>
 
             {/* Bottom Ticker */}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ThreeAvatar } from '../components/ThreeAvatar';
 import { NotesDrawer } from '../components/NotesDrawer';
 import { CodeSandboxModal } from '../components/CodeSandboxModal';
+import { GoogleTextSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
 import confetti from 'canvas-confetti';
 
 interface LearningPlayerViewProps {
@@ -19,6 +20,9 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
   const [isSandboxOpen, setIsSandboxOpen] = useState(false);
   const [activeLesson, setActiveLesson] = useState('2.1');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [isGeneratingExplanation, setIsGeneratingExplanation] = useState(false);
+  const [isSubHeaderVisible, setIsSubHeaderVisible] = useState(true);
+
 
   // Avatar state
   const [isMuted, setIsMuted] = useState(false);
@@ -99,93 +103,116 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
 
   return (
     <div className="flex flex-col w-full">
-      {/* Top Learner Sub-Header / App Bar */}
-      <section className="glass-card shadow-sm z-30 sticky top-[67px] px-6 lg:px-8 py-3.5 border-b border-[#e3e8f5]">
-        <div className="max-w-[1680px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Left: Navigation & Course Context */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onBackToCourses}
-              className="flex items-center justify-center w-9 h-9 rounded-full bg-white text-[#5f6368] hover:bg-[#e8f0fe] hover:text-[#1a73e8] border border-[#dadce0] transition-all shadow-2xs"
-              title="Back to Courses"
-            >
-              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-            </button>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-base text-[#1f1f1f]">
-                  Vector Databases 101: HNSW vs KNN
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#e8f0fe] text-[#1a73e8] text-xs font-bold border border-[#c2e7ff]">
-                  Deep Dive • 45 min
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#fef7e0] text-[#b06000] text-xs font-bold border border-[#feefc3] flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-                  Gemini Tutor Live
+      {/* Top Learner Sub-Header / App Bar (collapsible) */}
+      {isSubHeaderVisible ? (
+        <section className="glass-card shadow-sm z-30 sticky top-[67px] px-4 sm:px-6 lg:px-8 py-3 border-b border-[#e3e8f5] animate-in fade-in duration-200">
+          <div className="max-w-[1680px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Left: Navigation & Course Context */}
+            <div className="flex items-center gap-3.5 min-w-0">
+              <button
+                onClick={onBackToCourses}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-white text-[#5f6368] hover:bg-[#e8f0fe] hover:text-[#1a73e8] border border-[#dadce0] transition-all shadow-2xs shrink-0"
+                title="Back to Courses"
+              >
+                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+              </button>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-sm sm:text-base text-[#1f1f1f] truncate">
+                    Vector Databases 101: HNSW vs KNN
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#e8f0fe] text-[#1a73e8] text-[11px] font-bold border border-[#c2e7ff]">
+                    Module 2
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#fef7e0] text-[#b06000] text-[11px] font-bold border border-[#feefc3] flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px]">auto_awesome</span>
+                    3D Tutor Active
+                  </span>
+                </div>
+                <span className="text-[11px] text-[#5f6368] truncate">
+                  Instructor: Dr. K. Vance • High-Dimensional Geometry
                 </span>
               </div>
-              <span className="text-xs text-[#5f6368]">
-                Instructor: Prof. K. Vance • Module 2: High-Dimensional Geometry
-              </span>
             </div>
-          </div>
 
-          {/* Center: Progress Indicator */}
-          <div className="flex items-center gap-4 bg-white/80 border border-[#dadce0] px-4 py-2 rounded-full shadow-2xs">
-            <div className="flex flex-col">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-xs text-[#1f1f1f] font-bold">Module 2 of 5</span>
-                <span className="text-xs text-[#1a73e8] font-bold">40% Completed</span>
+            {/* Center: Progress Indicator */}
+            <div className="flex items-center gap-3 bg-white/90 border border-[#dadce0] px-3.5 py-1.5 rounded-full shadow-2xs shrink-0">
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                  <span className="text-[#1f1f1f]">Module 2/5</span>
+                  <span className="text-[#1a73e8]">40%</span>
+                </div>
+                <div className="w-28 sm:w-36 h-1.5 bg-[#e8eaed] rounded-full overflow-hidden mt-0.5">
+                  <div className="bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853] h-full rounded-full" style={{ width: '40%' }}></div>
+                </div>
               </div>
-              <div className="w-36 lg:w-48 h-2 bg-[#e8eaed] rounded-full overflow-hidden mt-1">
-                <div className="bg-gradient-to-r from-[#4285F4] via-[#EA4335] via-[#FBBC04] to-[#34A853] h-full rounded-full" style={{ width: '40%' }}></div>
+              <div className="flex items-center gap-1 text-[#5f6368] pl-2 border-l border-[#dadce0] text-xs">
+                <span className="material-symbols-outlined text-[15px] text-[#34A853]">schedule</span>
+                <span>18m left</span>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-[#5f6368] pl-2 border-l border-[#dadce0]">
-              <span className="material-symbols-outlined text-[16px] text-[#34A853]">schedule</span>
-              <span className="text-xs font-medium">18 mins left</span>
-            </div>
-          </div>
 
-          {/* Right: Action Bar */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsSandboxOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#e8f0fe] border border-[#c2e7ff] text-[#1a73e8] hover:bg-[#d2e3fc] transition-all text-xs font-semibold shadow-2xs"
-            >
-              <span className="material-symbols-outlined text-[18px]">terminal</span>
-              <span>Python Lab</span>
-            </button>
-            <button
-              onClick={() => setIsNotesOpen(true)}
-              className="relative inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-white border border-[#dadce0] text-[#1f1f1f] hover:bg-[#f1f3f4] transition-all text-xs font-medium shadow-2xs"
-            >
-              <span className="material-symbols-outlined text-[18px]">edit_note</span>
-              <span>Notes</span>
-              <span className="w-4 h-4 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-[10px] ml-0.5 font-bold">
-                3
-              </span>
-            </button>
-            <button
-              onClick={() => setIsBookmarked(!isBookmarked)}
-              aria-label="Bookmark Lesson"
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                isBookmarked ? 'bg-[#e8f0fe] text-[#1a73e8] border border-[#c2e7ff]' : 'text-[#5f6368] hover:bg-[#f1f3f4] border border-transparent'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[20px]">
-                {isBookmarked ? 'bookmark' : 'bookmark_border'}
-              </span>
-            </button>
+            {/* Right: Action Bar & Hide Bar Button */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsSandboxOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#e8f0fe] border border-[#c2e7ff] text-[#1a73e8] hover:bg-[#d2e3fc] transition-all text-xs font-semibold shadow-2xs"
+              >
+                <span className="material-symbols-outlined text-[16px]">terminal</span>
+                <span>Python Lab</span>
+              </button>
+              <button
+                onClick={() => setIsNotesOpen(true)}
+                className="relative inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-[#dadce0] text-[#1f1f1f] hover:bg-[#f1f3f4] transition-all text-xs font-medium shadow-2xs"
+              >
+                <span className="material-symbols-outlined text-[16px]">edit_note</span>
+                <span>Notes</span>
+                <span className="w-3.5 h-3.5 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-[9px] font-bold">
+                  3
+                </span>
+              </button>
+              <button
+                onClick={() => setIsBookmarked(!isBookmarked)}
+                aria-label="Bookmark Lesson"
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  isBookmarked ? 'bg-[#e8f0fe] text-[#1a73e8] border border-[#c2e7ff]' : 'text-[#5f6368] hover:bg-[#f1f3f4] border border-transparent'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {isBookmarked ? 'bookmark' : 'bookmark_border'}
+                </span>
+              </button>
+
+              {/* Hide bar toggle button */}
+              <button
+                onClick={() => setIsSubHeaderVisible(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[#5f6368] hover:bg-[#fce8e6] hover:text-[#c5221f] transition-colors ml-1 border border-transparent hover:border-[#fad2cf]"
+                title="Hide this bar to maximize screen area"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
           </div>
+        </section>
+      ) : (
+        /* Floating pill to restore bar */
+        <div className="max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-3 flex justify-end">
+          <button
+            onClick={() => setIsSubHeaderVisible(true)}
+            className="text-xs px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md shadow-2xs border border-[#dadce0] text-[#5f6368] hover:text-[#1a73e8] hover:border-[#4285F4] flex items-center gap-1.5 transition-all"
+            title="Restore course outline header bar"
+          >
+            <span className="material-symbols-outlined text-[15px]">visibility</span>
+            <span>Show Course Bar</span>
+          </button>
         </div>
-      </section>
+      )}
 
       {/* Main Learning Workspace */}
-      <main className="w-full max-w-[1680px] mx-auto px-6 lg:px-8 py-6">
+      <main className="w-full max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT SIDEBAR: Syllabus & Module Navigation (3 cols) */}
-          <aside className="lg:col-span-3 space-y-4">
+          <aside className="lg:col-span-3 min-w-0 space-y-4">
             {/* Syllabus Container Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-[#e3e2e6]/50 p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between pb-2 border-b border-[#e3e2e6]/50">
@@ -357,8 +384,8 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
             </div>
           </aside>
 
-          {/* CENTER VIEW: Theory, Concept Map & Micro-Quiz (5.5 cols on xl) */}
-          <section className="lg:col-span-5 xl:col-span-5 space-y-6">
+          {/* CENTER VIEW: Theory, Concept Map & Micro-Quiz (5 cols on xl) */}
+          <section className="lg:col-span-5 xl:col-span-5 min-w-0 space-y-6">
             {/* TOP LESSON ARTICLE CARD */}
             <article className="bg-white rounded-2xl shadow-sm border border-[#e3e2e6]/50 p-6 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
@@ -374,26 +401,50 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
                     <span className="material-symbols-outlined text-[13px]">graphic_eq</span>
                     Audio Synced
                   </span>
+                  <button
+                    onClick={() => {
+                      setIsGeneratingExplanation(true);
+                      setTimeout(() => setIsGeneratingExplanation(false), 1000);
+                    }}
+                    disabled={isGeneratingExplanation}
+                    className="ml-auto px-2.5 py-0.5 rounded-full bg-[#e8f0fe] hover:bg-[#d2e3fc] text-[#1a73e8] text-[11px] font-semibold flex items-center gap-1 border border-[#c2e7ff] transition-all"
+                    title="Regenerate theory explanation with Gemini"
+                  >
+                    <div className="flex items-center gap-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4285F4] google-dot-pulse"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#EA4335] google-dot-pulse" style={{ animationDelay: '150ms' }}></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FBBC04] google-dot-pulse" style={{ animationDelay: '300ms' }}></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#34A853] google-dot-pulse" style={{ animationDelay: '450ms' }}></span>
+                    </div>
+                    <span>{isGeneratingExplanation ? 'Regenerating...' : 'Regenerate'}</span>
+                  </button>
                 </div>
                 <h1 className="text-xl font-bold text-[#1a1b1e] mt-1">
                   2.1 Understanding Vector Indexes: Navigable Graphs & Hierarchies
                 </h1>
               </div>
 
-              <div className="space-y-3 text-sm text-[#414754] leading-relaxed">
-                <p>
-                  In production machine learning pipelines, embedding models convert unstructured
-                  modalities—such as natural language queries, audio spectrograms, and dense vision
-                  tokens—into coordinates within high-dimensional vector spaces (R^D, where D in
-                  [768, 3072]). Locating the closest semantic neighbor requires measuring vector
-                  divergence via Euclidean distance (L2) or Cosine similarity.
-                </p>
-                <p>
-                  A naive, exhaustive brute-force search (<code className="px-1.5 py-0.5 rounded bg-[#efedf1] text-[#1a1b1e] font-mono text-xs font-semibold">Exact Flat KNN</code>)
-                  computes pairwise distance queries across all stored points. While 100% accurate,
-                  its linear time complexity of <span className="font-mono font-medium text-[#1a1b1e]">O(N · D)</span> collapses throughput once N scales into millions of document chunks.
-                </p>
-              </div>
+              {isGeneratingExplanation ? (
+                <div className="py-2 space-y-3">
+                  <GoogleLoadingIndicator message="Synthesizing personalized pedagogy with Gemini..." size="sm" />
+                  <GoogleTextSkeleton lines={5} className="py-2" />
+                </div>
+              ) : (
+                <div className="space-y-3 text-sm text-[#414754] leading-relaxed">
+                  <p>
+                    In production machine learning pipelines, embedding models convert unstructured
+                    modalities—such as natural language queries, audio spectrograms, and dense vision
+                    tokens—into coordinates within high-dimensional vector spaces (R^D, where D in
+                    [768, 3072]). Locating the closest semantic neighbor requires measuring vector
+                    divergence via Euclidean distance (L2) or Cosine similarity.
+                  </p>
+                  <p>
+                    A naive, exhaustive brute-force search (<code className="px-1.5 py-0.5 rounded bg-[#efedf1] text-[#1a1b1e] font-mono text-xs font-semibold">Exact Flat KNN</code>)
+                    computes pairwise distance queries across all stored points. While 100% accurate,
+                    its linear time complexity of <span className="font-mono font-medium text-[#1a1b1e]">O(N · D)</span> collapses throughput once N scales into millions of document chunks.
+                  </p>
+                </div>
+              )}
 
               {/* Pedagogical Principle Callout Box */}
               <div className="bg-[#d8e2ff]/25 rounded-xl p-4 flex items-start gap-3 border border-[#adc7ff]/40">
@@ -477,8 +528,8 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
 
                 {/* Vector Diagram Canvas */}
                 <div
-                  className="w-full max-w-xl transition-transform duration-200"
-                  style={{ transform: `scale(${conceptZoom})` }}
+                  className="w-full max-w-full overflow-x-auto transition-transform duration-200"
+                  style={{ transform: `scale(${conceptZoom})`, transformOrigin: 'top center' }}
                 >
                   <svg className="w-full h-auto" viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -708,7 +759,7 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
           </section>
 
           {/* RIGHT PERSISTENT 3D TALKING AVATAR COMPANION (4 cols on xl) */}
-          <aside className="lg:col-span-4 xl:col-span-4 sticky top-32 flex flex-col gap-4">
+          <aside className="lg:col-span-4 xl:col-span-4 min-w-0 sticky top-24 flex flex-col gap-4">
             <div className="bg-white rounded-2xl p-4 shadow-xl border-2 border-[#005bbf]/20 flex flex-col gap-4">
               {/* Header */}
               <div className="flex items-center justify-between">

@@ -1,4 +1,4 @@
-export type NavTab = 'studio' | 'my-courses' | 'learning-player' | 'analytics' | 'agent-logs' | 'oral-defense';
+export type NavTab = 'home' | 'studio' | 'my-courses' | 'learning-player' | 'analytics' | 'agent-logs' | 'oral-defense' | 'settings';
 
 export interface IngestionFileItem {
   id: string;

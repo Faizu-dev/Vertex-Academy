@@ -106,3 +106,89 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #727785;
 }
+
+/* Google 4-Color Skeleton Shimmer Animations */
+@keyframes google-shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes google-shimmer-vibrant-sweep {
+  0% {
+    background-position: -250% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
+.google-skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #edf2f7 0%,
+    rgba(66, 133, 244, 0.18) 20%,
+    rgba(234, 67, 53, 0.16) 40%,
+    rgba(251, 188, 4, 0.18) 60%,
+    rgba(52, 168, 83, 0.18) 80%,
+    #edf2f7 100%
+  );
+  background-size: 250% 100%;
+  animation: google-shimmer-sweep 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.google-skeleton-shimmer-vibrant {
+  background: linear-gradient(
+    90deg,
+    #e8edf4 0%,
+    rgba(66, 133, 244, 0.26) 20%,
+    rgba(234, 67, 53, 0.24) 40%,
+    rgba(251, 188, 4, 0.25) 60%,
+    rgba(52, 168, 83, 0.26) 80%,
+    #e8edf4 100%
+  );
+  background-size: 250% 100%;
+  animation: google-shimmer-vibrant-sweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes google-pulse-dots {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.google-dot-pulse {
+  animation: google-pulse-dots 1.3s ease-in-out infinite;
+}
+
+@keyframes google-border-glow {
+  0%, 100% {
+    border-color: rgba(66, 133, 244, 0.4);
+    box-shadow: 0 0 12px rgba(66, 133, 244, 0.15);
+  }
+  25% {
+    border-color: rgba(234, 67, 53, 0.4);
+    box-shadow: 0 0 12px rgba(234, 67, 53, 0.15);
+  }
+  50% {
+    border-color: rgba(251, 188, 4, 0.45);
+    box-shadow: 0 0 12px rgba(251, 188, 4, 0.15);
+  }
+  75% {
+    border-color: rgba(52, 168, 83, 0.4);
+    box-shadow: 0 0 12px rgba(52, 168, 83, 0.15);
+  }
+}
+
+.google-skeleton-border {
+  animation: google-border-glow 3.5s ease-in-out infinite;
+}
+

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LogEntry } from '../types';
+import { GoogleTableRowSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
 
 interface AgentLogsViewProps {
   onReplayInSandbox?: () => void;
@@ -7,12 +8,14 @@ interface AgentLogsViewProps {
 
 export const AgentLogsView: React.FC<AgentLogsViewProps> = ({ onReplayInSandbox }) => {
   const [isLiveStreaming, setIsLiveStreaming] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [selectedAgentFilter, setSelectedAgentFilter] = useState('All Agents');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('All Statuses');
   const [copiedJson, setCopiedJson] = useState(false);
   const [selectedLogId, setSelectedLogId] = useState('log_771122');
   const [replaySuccess, setReplaySuccess] = useState(false);
+
 
   const initialLogs: LogEntry[] = [
     {
@@ -242,7 +245,7 @@ export const AgentLogsView: React.FC<AgentLogsViewProps> = ({ onReplayInSandbox 
   });
 
   return (
-    <div className="w-full px-6 lg:px-8 py-6 max-w-[1680px] mx-auto space-y-6">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6 max-w-[1560px] mx-auto space-y-6">
       {/* GEMINI AURORA HEADER */}
       <section className="relative overflow-hidden rounded-3xl p-6 lg:p-8 text-white shadow-lg bg-gradient-to-r from-[#1a73e8] via-[#7C3AED] via-[#D96570] to-[#FBBC04]">
         <div className="pointer-events-none absolute -right-16 -top-20 h-80 w-80 rounded-full bg-white/20 blur-3xl"></div>
@@ -509,9 +512,28 @@ export const AgentLogsView: React.FC<AgentLogsViewProps> = ({ onReplayInSandbox 
                 Live Feed
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#414754]">
-              <span className="material-symbols-outlined text-[15px] text-[#006d3a]">sync</span>
-              <span>Buffer: {filteredLogs.length} retained</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setIsRefreshing(true);
+                  setTimeout(() => setIsRefreshing(false), 1000);
+                }}
+                disabled={isRefreshing}
+                className="h-7 px-2.5 rounded-full bg-white hover:bg-[#e8f0fe] text-[#1a73e8] border border-[#c2e7ff] text-[11px] font-semibold flex items-center gap-1.5 transition-all shadow-2xs"
+                title="Fetch latest log events from Vertex cluster"
+              >
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4285F4] google-dot-pulse"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#EA4335] google-dot-pulse" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FBBC04] google-dot-pulse" style={{ animationDelay: '300ms' }}></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#34A853] google-dot-pulse" style={{ animationDelay: '450ms' }}></span>
+                </div>
+                <span>{isRefreshing ? 'Fetching...' : 'Fetch'}</span>
+              </button>
+              <div className="flex items-center gap-1.5 text-xs text-[#414754]">
+                <span className="material-symbols-outlined text-[15px] text-[#006d3a]">sync</span>
+                <span>Buffer: {filteredLogs.length} retained</span>
+              </div>
             </div>
           </div>
 
@@ -529,6 +551,9 @@ export const AgentLogsView: React.FC<AgentLogsViewProps> = ({ onReplayInSandbox 
                   <th className="py-3 px-4 text-right">Details</th>
                 </tr>
               </thead>
+              {isRefreshing ? (
+                <GoogleTableRowSkeleton count={6} vibrant={true} />
+              ) : (
               <tbody className="divide-y divide-[#efedf1] text-[#1a1b1e]">
                 {filteredLogs.map((log) => {
                   const isSelected = selectedLogId === log.id;
@@ -608,6 +633,7 @@ export const AgentLogsView: React.FC<AgentLogsViewProps> = ({ onReplayInSandbox 
                   );
                 })}
               </tbody>
+              )}
             </table>
           </div>
 
