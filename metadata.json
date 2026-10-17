@@ -1,0 +1,6 @@
+{
+  "name": "Agentic LMS - Agentic Learning OS",
+  "description": "Next-generation Agentic Learning OS with multimodal Gemini ingestion pipelines, live 3D conversational tutor, interactive knowledge graphs, and verifiable oral defense certifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
