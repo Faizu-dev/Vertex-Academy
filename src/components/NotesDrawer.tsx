@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
 
 interface NotesDrawerProps {
   isOpen: boolean;
@@ -12,14 +13,46 @@ export const NotesDrawer: React.FC<NotesDrawerProps> = ({ isOpen, onClose }) => 
     'efConstruction controls graph density at build time; M controls max connections per node.',
   ]);
   const [newNote, setNewNote] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      api.getNotes('crs_vector_101')
+        .then((fetchedNotes) => {
+          if (fetchedNotes && fetchedNotes.length > 0) {
+            setNotes(fetchedNotes);
+          }
+        })
+        .catch((err) => console.log('Notes fetch error', err));
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleAddNote = (e: React.FormEvent) => {
+  const handleAddNote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newNote.trim()) return;
-    setNotes([newNote.trim(), ...notes]);
+    const updated = [newNote.trim(), ...notes];
+    setNotes(updated);
     setNewNote('');
+    setIsSyncing(true);
+    try {
+      await api.saveNotes('crs_vector_101', updated);
+    } catch (e) {
+      console.log('Error saving note to backend', e);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleDeleteNote = async (idx: number) => {
+    const updated = notes.filter((_, i) => i !== idx);
+    setNotes(updated);
+    try {
+      await api.saveNotes('crs_vector_101', updated);
+    } catch (e) {
+      console.log('Error deleting note from backend', e);
+    }
   };
 
   return (
@@ -71,7 +104,7 @@ export const NotesDrawer: React.FC<NotesDrawerProps> = ({ isOpen, onClose }) => 
               <div className="flex items-center justify-between text-[11px] text-[#727785] pt-1">
                 <span>Module 2: High-Dimensional Geometry</span>
                 <button
-                  onClick={() => setNotes(notes.filter((_, i) => i !== idx))}
+                  onClick={() => handleDeleteNote(idx)}
                   className="hover:text-[#ba1a1a]"
                 >
                   Delete

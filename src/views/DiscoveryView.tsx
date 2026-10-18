@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CourseItem } from '../types';
 import { TrailerModal } from '../components/TrailerModal';
 import { GoogleCardSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
+import { api } from '../services/api';
 
 interface DiscoveryViewProps {
   onSelectCourse: (courseId: string) => void;
@@ -18,6 +19,17 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
 
+  useEffect(() => {
+    setIsFetching(true);
+    api.getCourses()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setCourses(data);
+        }
+      })
+      .catch((err) => console.log('Could not fetch courses from backend', err))
+      .finally(() => setIsFetching(false));
+  }, []);
 
   // Curated Courses matching the mockup exactly
   const [courses, setCourses] = useState<CourseItem[]>([

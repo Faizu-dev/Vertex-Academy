@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavTab } from '../types';
 import { VertexAcademyIcon } from '../components/VertexAcademyIcon';
 import confetti from 'canvas-confetti';
+import { api, UserProfileData } from '../services/api';
 
 interface HomeViewProps {
   onNavigate: (tab: NavTab) => void;
@@ -20,9 +21,18 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
   const [tutorPersonality, setTutorPersonality] = useState<'Socratic' | 'Concise' | 'Academic'>('Socratic');
   const [showCopyFeedback, setShowCopyFeedback] = useState(false);
+  const [profile, setProfile] = useState<UserProfileData | null>(null);
+
+  useEffect(() => {
+    api.getProfile()
+      .then((data) => {
+        if (data) setProfile(data);
+      })
+      .catch((err) => console.log('Could not load profile in HomeView', err));
+  }, []);
 
   const handleCopyProjectId = () => {
-    navigator.clipboard?.writeText('vertex-genai-prod-0824');
+    navigator.clipboard?.writeText(profile?.gcpProjectId || 'vertex-genai-prod-0824');
     setShowCopyFeedback(true);
     setTimeout(() => setShowCopyFeedback(false), 2000);
   };
@@ -78,7 +88,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2.5">
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-[#1f1f1f] tracking-tight">
-                  Alex Rivera
+                  {profile?.fullName || 'Alex Rivera'}
                 </h1>
                 <span className="px-3 py-0.5 rounded-full bg-[#e8f0fe] text-[#1a73e8] text-xs font-bold border border-[#c2e7ff] flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">verified</span>
@@ -90,19 +100,18 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               </div>
 
               <p className="text-xs sm:text-sm text-[#5f6368] font-medium max-w-2xl leading-relaxed">
-                Senior Machine Learning Systems Architect • Alphabet / Google Cloud AI Infrastructure Group.
-                Leading vector index topologies and autonomous agentic pipelines.
+                {profile?.headline || 'Senior Machine Learning Systems Architect'} • {profile?.organization || 'Google Cloud AI Infrastructure Group'}
               </p>
 
               <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-[#5f6368]">
                 <div className="flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px] text-[#4285F4]">mail</span>
-                  <span className="font-mono text-[11px]">alex.rivera@cloud.google.com</span>
+                  <span className="font-mono text-[11px]">{profile?.email || 'alex.rivera@cloud.google.com'}</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px] text-[#34A853]">location_on</span>
-                  <span>us-central1 (Iowa TPU Cluster)</span>
+                  <span>{profile?.location || 'us-central1 (Iowa TPU Cluster)'}</span>
                 </div>
                 <span>•</span>
                 <div className="flex items-center gap-1">

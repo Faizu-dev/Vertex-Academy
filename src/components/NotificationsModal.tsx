@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavTab } from '../types';
+import { api } from '../services/api';
 
 export interface AppNotification {
   id: string;
@@ -103,6 +104,18 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
   const [filter, setFilter] = useState<'all' | 'unread' | 'defense' | 'ingestion'>('all');
 
+  useEffect(() => {
+    if (isOpen) {
+      api.getNotifications()
+        .then((data) => {
+          if (data && data.length > 0) {
+            setNotifications(data as AppNotification[]);
+          }
+        })
+        .catch((err) => console.log('Could not fetch notifications from backend', err));
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const unreadCount = notifications.filter((n) => n.unread).length;
@@ -119,6 +132,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
     setNotifications((prev) =>
       prev.map((n) => (n.id === notif.id ? { ...n, unread: false } : n))
     );
+    api.markNotificationRead(notif.id).catch(() => {});
     if (notif.navTarget && onNavigate) {
       onNavigate(notif.navTarget);
       onClose();

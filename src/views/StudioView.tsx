@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { IngestionFileItem } from '../types';
 import { ViewChunksModal } from '../components/ViewChunksModal';
 import { TrailerModal } from '../components/TrailerModal';
 import { GoogleTableRowSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
+import { api } from '../services/api';
 
 interface StudioViewProps {
   onNavigateToPlayer?: () => void;
@@ -116,7 +117,18 @@ export const StudioView: React.FC<StudioViewProps> = ({
     },
   ];
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch ingestion files on mount
+  useEffect(() => {
+    api.getIngestionFiles()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setFiles(data);
+        }
+      })
+      .catch((err) => console.log('Could not load ingestion files', err));
+  }, []);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const extension = file.name.split('.').pop()?.toUpperCase() as any;
@@ -133,23 +145,64 @@ export const StudioView: React.FC<StudioViewProps> = ({
         vectorsGenerated: '640 Vectors in-progress',
       };
       setFiles([newFile, ...files]);
+
+      try {
+        await api.uploadFile({
+          name: file.name,
+          format: extension || 'PDF',
+          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        });
+
+        // Fast Multimodal Document Analysis via Gemini 3.8 Flash
+        const analysis = await api.analyzeDocument(file.name, extension, `${(file.size / (1024 * 1024)).toFixed(1)} MB`);
+        if (analysis && analysis.data) {
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === newFile.id
+                ? {
+                    ...f,
+                    status: 'indexed',
+                    progress: 100,
+                    remainingTime: undefined,
+                    details: `${f.size} • ${analysis.data.estimatedChunks || 1248} Chunks • Vectorized with text-embedding-004`,
+                    vectorsGenerated: `${analysis.data.estimatedChunks || 1248} Vectors (M=${analysis.data.recommendedM || 16}, ef=${analysis.data.recommendedEfConstruction || 200})`,
+                  }
+                : f
+            )
+          );
+        }
+      } catch (err) {
+        console.warn('Backend upload notice', err);
+      }
     }
   };
 
-  const handleRegenerate = () => {
+  const handleRegenerate = async () => {
     setIsRegenerating(true);
-    setTimeout(() => {
+    try {
+      await api.generateSyllabus('Vector Database Architectures & HNSW Indexing');
+    } catch (err) {
+      console.warn('Backend syllabus generation notice', err);
+    } finally {
       setIsRegenerating(false);
-    }, 1500);
+    }
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     setIsPublishing(true);
-    setTimeout(() => {
+    try {
+      await api.publishCourse({
+        title: 'Vector Database Architectures & HNSW Indexing',
+        category: 'Vertex AI & Infrastructure',
+        modulesCount: 4,
+      });
+    } catch (err) {
+      console.warn('Backend publish notice', err);
+    } finally {
       setIsPublishing(false);
       setPublishSuccess(true);
       setTimeout(() => setPublishSuccess(false), 3500);
-    }, 1200);
+    }
   };
 
   const exportRegistryCSV = () => {

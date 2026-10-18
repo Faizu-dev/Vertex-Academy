@@ -10,6 +10,7 @@ interface HeaderProps {
   onOpenSkeletonShowcase?: () => void;
   onOpenNotifications?: () => void;
   onOpenHelp?: () => void;
+  onOpenFastApis?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,6 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSkeletonShowcase,
   onOpenNotifications,
   onOpenHelp,
+  onOpenFastApis,
 }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -121,7 +123,19 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            {/* Google Services & Fast APIs Suite Hub Button */}
+            <button
+              onClick={onOpenFastApis}
+              aria-label="Google Services and Fast APIs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#e8f0fe] via-[#f8fafd] to-[#e6f4ea] hover:from-[#d2e3fc] hover:to-[#ceead6] text-[#1a73e8] border border-[#c2e7ff] text-xs font-bold transition-all shadow-2xs hover:shadow-xs"
+              title="Google Cloud Services & Fast APIs Suite"
+            >
+              <span className="material-symbols-outlined text-[16px] text-[#1a73e8]">cloud_sync</span>
+              <span className="hidden sm:inline">Google Services & Fast APIs</span>
+              <span className="sm:hidden">APIs</span>
+            </button>
+
             {/* Bell Icon for Notifications */}
             <button
               onClick={onOpenNotifications}

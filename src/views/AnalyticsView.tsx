@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SkillNode } from '../types';
 import { CodeSandboxModal } from '../components/CodeSandboxModal';
 import { GoogleMetricSkeleton, GoogleGraphSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
+import { api } from '../services/api';
 
 interface AnalyticsViewProps {
   onNavigateToPlayer?: () => void;
@@ -155,7 +156,19 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     },
   ];
 
+  const initialNodes: SkillNode[] = nodes;
+  const [skillNodes, setSkillNodes] = useState<SkillNode[]>(initialNodes);
   const [selectedNode, setSelectedNode] = useState<SkillNode>(nodes[4]); // default HNSW
+
+  useEffect(() => {
+    api.getSkillGraph()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setSkillNodes(data);
+        }
+      })
+      .catch((err) => console.log('Could not fetch skill graph', err));
+  }, []);
 
   const handleExportPDF = () => {
     setCopiedTranscript(true);
@@ -422,7 +435,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
                 {/* Interactive Nodes Layer */}
                 <div className="relative w-full h-full z-10">
-              {nodes
+              {skillNodes
                 .filter((n) => selectedDomain === 'all' || n.category === selectedDomain)
                 .map((node) => {
                   const isSelected = selectedNode.id === node.id;

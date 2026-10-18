@@ -4,6 +4,7 @@ import { NotesDrawer } from '../components/NotesDrawer';
 import { CodeSandboxModal } from '../components/CodeSandboxModal';
 import { GoogleTextSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
 import confetti from 'canvas-confetti';
+import { api } from '../services/api';
 
 interface LearningPlayerViewProps {
   onBackToCourses?: () => void;
@@ -52,7 +53,7 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
   // Concept Map zoom state
   const [conceptZoom, setConceptZoom] = useState(1);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
@@ -61,23 +62,56 @@ export const LearningPlayerView: React.FC<LearningPlayerViewProps> = ({
     setDialogueMessages((prev) => [...prev, newMsg]);
     setInputMessage('');
 
-    // Avatar response simulation
     setIsAvatarSpeaking(true);
-    setTimeout(() => {
-      let reply =
-        "Excellent question! In HNSW graphs, the efSearch parameter sets the size of the dynamic candidate list during query time. Higher values yield higher recall with logarithmic latency tradeoffs.";
-      if (userText.toLowerCase().includes('python') || userText.toLowerCase().includes('code')) {
-        reply =
-          "I've initialized the Python Sandbox with the cosine vs L2 test matrix for you. Click 'Run Python Benchmark' to see the 224x speedup!";
-      } else if (userText.toLowerCase().includes('oral') || userText.toLowerCase().includes('defense') || userText.toLowerCase().includes('exam')) {
-        reply =
-          "You've mastered Module 2! You can now take the Gemini Live S2S Oral Defense to certify your credentials.";
-      }
-      setDialogueMessages((prev) => [
-        ...prev,
-        { sender: 'tutor' as const, text: reply, time: 'Just now' },
-      ]);
-    }, 1000);
+
+    let accumulatedText = '';
+    let hasAddedTutor = false;
+
+    try {
+      await api.streamTutorChat(
+        userText,
+        (chunk) => {
+          accumulatedText += chunk;
+          if (!hasAddedTutor) {
+            hasAddedTutor = true;
+            setDialogueMessages((prev) => [
+              ...prev,
+              { sender: 'tutor' as const, text: accumulatedText, time: 'Just now' },
+            ]);
+          } else {
+            setDialogueMessages((prev) =>
+              prev.map((msg, i) =>
+                i === prev.length - 1 ? { ...msg, text: accumulatedText } : msg
+              )
+            );
+          }
+        },
+        () => {
+          setIsAvatarSpeaking(false);
+        },
+        personality,
+        activeLesson
+      );
+      return;
+    } catch (err) {
+      console.warn('Streaming error, falling back', err);
+    }
+
+    // Graceful fallback
+    let reply =
+      "Excellent question! In HNSW graphs, the efSearch parameter sets the size of the dynamic candidate list during query time. Higher values yield higher recall with logarithmic latency tradeoffs.";
+    if (userText.toLowerCase().includes('python') || userText.toLowerCase().includes('code')) {
+      reply =
+        "I've initialized the Python Sandbox with the cosine vs L2 test matrix for you. Click 'Run Python Benchmark' to see the 224x speedup!";
+    } else if (userText.toLowerCase().includes('oral') || userText.toLowerCase().includes('defense') || userText.toLowerCase().includes('exam')) {
+      reply =
+        "You've mastered Module 2! You can now take the Gemini Live S2S Oral Defense to certify your credentials.";
+    }
+    setDialogueMessages((prev) => [
+      ...prev,
+      { sender: 'tutor' as const, text: reply, time: 'Just now' },
+    ]);
+    setIsAvatarSpeaking(false);
   };
 
   const handleQuizSubmit = () => {

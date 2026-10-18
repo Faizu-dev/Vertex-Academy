@@ -13,6 +13,7 @@ import { AnalyticsView } from './views/AnalyticsView';
 import { OralDefenseView } from './views/OralDefenseView';
 import { AgentLogsView } from './views/AgentLogsView';
 import { AccountSettingsView } from './views/AccountSettingsView';
+import { BackendConnectionModal } from './components/BackendConnectionModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
@@ -20,6 +21,7 @@ export default function App() {
   const [isSkeletonModalOpen, setIsSkeletonModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isFastApisOpen, setIsFastApisOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
@@ -33,6 +35,13 @@ export default function App() {
         onOpenSkeletonShowcase={() => setIsSkeletonModalOpen(true)}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenHelp={() => setIsHelpOpen(true)}
+        onOpenFastApis={() => setIsFastApisOpen(true)}
+      />
+
+      {/* Google Cloud Services & Fast APIs Suite Hub Modal */}
+      <BackendConnectionModal
+        isOpen={isFastApisOpen}
+        onClose={() => setIsFastApisOpen(false)}
       />
 
       {/* Notifications Drawer / Modal */}

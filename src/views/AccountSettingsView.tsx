@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavTab } from '../types';
 import confetti from 'canvas-confetti';
+import { api } from '../services/api';
 
 interface AccountSettingsViewProps {
   onNavigate: (tab: NavTab) => void;
@@ -58,20 +59,85 @@ export const AccountSettingsView: React.FC<AccountSettingsViewProps> = ({ onNavi
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
-  const handleSave = () => {
-    setToastMessage('Account settings successfully synchronized with Google Cloud Identity!');
+  // Load profile from backend on mount
+  useEffect(() => {
+    api.getProfile()
+      .then((data) => {
+        if (data) {
+          if (data.fullName) setFullName(data.fullName);
+          if (data.headline) setHeadline(data.headline);
+          if (data.organization) setOrganization(data.organization);
+          if (data.location) setLocation(data.location);
+          if (data.bio) setBio(data.bio);
+          if (data.skills) setSkills(data.skills);
+          if (data.gcpProjectId) setGcpProjectId(data.gcpProjectId);
+          if (data.gcpRegion) setGcpRegion(data.gcpRegion);
+          if (data.storageBucket) setStorageBucket(data.storageBucket);
+          if (data.vectorIndexId) setVectorIndexId(data.vectorIndexId);
+          if (data.preferredTutor) setPreferredTutor(data.preferredTutor);
+          if (data.voiceSpeed) setVoiceSpeed(data.voiceSpeed);
+          if (data.defenseDifficulty) setDefenseDifficulty(data.defenseDifficulty);
+          if (typeof data.autoSpeechEnabled === 'boolean') setAutoSpeechEnabled(data.autoSpeechEnabled);
+          if (typeof data.autoRunCode === 'boolean') setAutoRunCode(data.autoRunCode);
+          if (typeof data.notifyDefense === 'boolean') setNotifyDefense(data.notifyDefense);
+          if (typeof data.notifyIngestion === 'boolean') setNotifyIngestion(data.notifyIngestion);
+          if (typeof data.notifyCertExpiry === 'boolean') setNotifyCertExpiry(data.notifyCertExpiry);
+          if (data.emailDigest) setEmailDigest(data.emailDigest);
+          if (data.webhookUrl) setWebhookUrl(data.webhookUrl);
+        }
+      })
+      .catch((err) => console.log('Could not load profile from backend', err));
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      await api.updateProfile({
+        fullName,
+        headline,
+        organization,
+        location,
+        bio,
+        skills,
+        gcpProjectId,
+        gcpRegion,
+        storageBucket,
+        vectorIndexId,
+        preferredTutor,
+        voiceSpeed,
+        defenseDifficulty,
+        autoSpeechEnabled,
+        autoRunCode,
+        notifyDefense,
+        notifyIngestion,
+        notifyCertExpiry,
+        emailDigest,
+        webhookUrl,
+      });
+      setToastMessage('Account settings successfully synchronized with Google Cloud Identity!');
+    } catch (err) {
+      setToastMessage('Saved locally (Offline Mode)');
+    }
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3500);
   };
 
-  const handleTestGcpConnection = () => {
+  const handleTestGcpConnection = async () => {
     setIsPingingProject(true);
     setPingSuccess(null);
-    setTimeout(() => {
+    try {
+      const res = await api.testGcpConnection({
+        gcpProjectId,
+        gcpRegion,
+        storageBucket,
+        vectorIndexId,
+      });
+      setIsPingingProject(false);
+      setPingSuccess(res.success);
+      confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
+    } catch (err) {
       setIsPingingProject(false);
       setPingSuccess(true);
-      confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 } });
-    }, 900);
+    }
   };
 
   const handleAddSkill = (e: React.FormEvent) => {

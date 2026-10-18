@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LogEntry } from '../types';
 import { GoogleTableRowSkeleton, GoogleLoadingIndicator } from '../components/GoogleSkeleton';
+import { api } from '../services/api';
 
 interface AgentLogsViewProps {
   onReplayInSandbox?: () => void;
@@ -156,39 +157,33 @@ export const AgentLogsView: React.FC<AgentLogsViewProps> = ({ onReplayInSandbox 
 
   const [logs, setLogs] = useState<LogEntry[]>(initialLogs);
 
-  // Auto-refresh simulation when Live Stream is active
+  // Fetch initial logs from backend
   useEffect(() => {
-    let interval: any;
-    if (isLiveStreaming) {
-      interval = setInterval(() => {
-        const randomSeconds = Math.floor(Math.random() * 59);
-        const randomMs = Math.floor(Math.random() * 999);
-        const newLog: LogEntry = {
-          id: `log_${Date.now().toString().slice(-6)}`,
-          timestamp: `11:26:${randomSeconds < 10 ? '0' : ''}${randomSeconds}.${randomMs}`,
-          userId: `usr_${Math.floor(100000 + Math.random() * 900000)}`,
-          agentName: 'RAGAgent',
-          actionExecuted: 'VECTOR_SEARCH',
-          toolCalled: 'VertexAI.VectorSearch()',
-          status: 'SUCCESS',
-          latency: `${Math.floor(70 + Math.random() * 50)}ms`,
-          latencyBreakdown: { network: 12, reasoning: 72, storage: 14 },
-          triggerSource: 'Learner Voice S2S Assistant',
-          input: 'Automated retrieval lookup for vector distance',
-          output: 'Returned nearest cluster centroids.',
-          parameters: {
-            dimension: 1536,
-            metric: 'COSINE',
-          },
-          evalScore: {
-            intentConfidence: 0.995,
-            guardrailsPassed: true,
-          },
-        };
-        setLogs((prev) => [newLog, ...prev.slice(0, 15)]);
-      }, 6000);
-    }
-    return () => clearInterval(interval);
+    api.getAgentLogs()
+      .then((backendLogs) => {
+        if (backendLogs && backendLogs.length > 0) {
+          setLogs(backendLogs);
+        }
+      })
+      .catch((err) => console.log('Could not fetch initial agent logs', err));
+  }, []);
+
+  // Connect to live SSE Stream from backend
+  useEffect(() => {
+    if (!isLiveStreaming) return;
+
+    const cleanup = api.subscribeAgentLogsStream(
+      (newLog: LogEntry) => {
+        setLogs((prev) => [newLog, ...prev.slice(0, 49)]);
+      },
+      (error) => {
+        console.warn('SSE stream error, continuing with fallback', error);
+      }
+    );
+
+    return () => {
+      cleanup();
+    };
   }, [isLiveStreaming]);
 
   const selectedLog = logs.find((l) => l.id === selectedLogId) || logs[0];

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
+import { api, DefenseEvalResult } from '../services/api';
 
 interface OralDefenseViewProps {
   onBackToPlayer?: () => void;
@@ -10,8 +11,15 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
   const [copiedHash, setCopiedHash] = useState<boolean>(false);
   const [isRubricOpen, setIsRubricOpen] = useState<boolean>(false);
+  const [isLiveDefending, setIsLiveDefending] = useState<boolean>(false);
+  const [defenseInput, setDefenseInput] = useState<string>('');
+  const [isSubmittingDefense, setIsSubmittingDefense] = useState<boolean>(false);
+  const [certificateHash, setCertificateHash] = useState<string>(
+    'ALMS-VEC-884920-VERIFIED-HASH-8a3f7c19d9e1b204'
+  );
+  const [socialToast, setSocialToast] = useState<string | null>(null);
 
-  const stepData: Record<
+  const initialStepData: Record<
     number,
     {
       title: string;
@@ -61,10 +69,51 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
     },
   };
 
-  const current = stepData[activeStep];
+  const [steps, setSteps] = useState(initialStepData);
+  const current = steps[activeStep];
+
+  const handleSubmitDefense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!defenseInput.trim()) return;
+
+    setIsSubmittingDefense(true);
+    try {
+      const res = await api.evaluateOralDefense({
+        stepNumber: activeStep,
+        question: current.question,
+        spokenAnswer: defenseInput.trim(),
+        courseId: 'crs_vector_101',
+      });
+
+      if (res && res.success) {
+        setCertificateHash(res.hash);
+        setSteps((prev) => ({
+          ...prev,
+          [activeStep]: {
+            ...prev[activeStep],
+            score: `Score: ${res.overallScore}/100 • Evaluated`,
+            transcript: `Alex (Learner): "${defenseInput.trim()}"`,
+            feedback: res.feedback,
+            rubric: res.rubricScores,
+          },
+        }));
+        setDefenseInput('');
+        setIsLiveDefending(false);
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+      }
+    } catch (err) {
+      console.error('Defense submission error', err);
+    } finally {
+      setIsSubmittingDefense(false);
+    }
+  };
 
   const handleCopyHash = () => {
-    navigator.clipboard.writeText('ALMS-VEC-884920-VERIFIED-HASH-8a3f7c19d9e1b204');
+    navigator.clipboard.writeText(certificateHash);
     setCopiedHash(true);
     setTimeout(() => setCopiedHash(false), 2500);
   };
@@ -79,7 +128,7 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
   };
 
   const handleDownloadTranscript = () => {
-    const text = `AGENTIC LMS - GEMINI ORAL DEFENSE AUDIT TRANSCRIPT\nLearner: Alex Rivera\nExam Date: October 24, 2024\nOverall Score: 96/100 (Distinction)\n\nStep 1: ${stepData[1].question}\n${stepData[1].transcript}\nFeedback: ${stepData[1].feedback}\n\nStep 2: ${stepData[2].question}\n${stepData[2].transcript}\nFeedback: ${stepData[2].feedback}\n\nStep 3: ${stepData[3].question}\n${stepData[3].transcript}\nFeedback: ${stepData[3].feedback}\n\nCryptographic Hash: ALMS-VEC-884920-VERIFIED-HASH-8a3f7c19d9e1b204`;
+    const text = `AGENTIC LMS - GEMINI ORAL DEFENSE AUDIT TRANSCRIPT\nLearner: Alex Rivera\nExam Date: October 24, 2024\nOverall Score: 96/100 (Distinction)\n\nStep 1: ${steps[1].question}\n${steps[1].transcript}\nFeedback: ${steps[1].feedback}\n\nStep 2: ${steps[2].question}\n${steps[2].transcript}\nFeedback: ${steps[2].feedback}\n\nStep 3: ${steps[3].question}\n${steps[3].transcript}\nFeedback: ${steps[3].feedback}\n\nCryptographic Hash: ${certificateHash}`;
     const element = document.createElement('a');
     const file = new Blob([text], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
@@ -302,6 +351,63 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
                   <span className="text-sm font-bold text-[#006d3a]">{current.rubric.edge}</span>
                 </div>
               </div>
+
+              {/* Live Oral Response Submission Drawer/Box */}
+              {isLiveDefending ? (
+                <form
+                  onSubmit={handleSubmitDefense}
+                  className="mt-3 p-4 rounded-xl bg-gradient-to-br from-[#f8fafd] to-[#e8f0fe] border border-[#adc7ff] space-y-3 animate-in fade-in duration-200"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[#005bbf] text-[20px] animate-pulse">
+                        mic
+                      </span>
+                      <span className="text-xs font-bold text-[#004493]">
+                        Deliver Live Speech-to-Speech Defense Response
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsLiveDefending(false)}
+                      className="text-[#727785] hover:text-[#1a1b1e] text-xs"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <textarea
+                    value={defenseInput}
+                    onChange={(e) => setDefenseInput(e.target.value)}
+                    placeholder="Enter or transcribe your spoken defense analysis to this prompt (e.g. explain HNSW M, efConstruction, Euclidean vs Cosine tradeoffs, or memory bandwidth bounds)..."
+                    rows={3}
+                    className="w-full p-3 rounded-xl bg-white border border-[#dadce0] text-xs text-[#1a1b1e] focus:outline-none focus:ring-2 focus:ring-[#005bbf]"
+                  />
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] text-[#5f6368]">
+                      Evaluated live by Gemini 3.8 Flash & Rubric Scoring Engine
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingDefense || !defenseInput.trim()}
+                      className="px-4 py-2 rounded-full bg-[#005bbf] hover:bg-[#1a73e8] disabled:opacity-50 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+                    >
+                      {isSubmittingDefense ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                          <span>Evaluating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[16px]">send</span>
+                          <span>Submit Defense to AI</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
             </div>
 
             {/* Bottom Action Bar */}
@@ -315,6 +421,13 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
                     {isPlayingAudio ? 'pause' : 'play_arrow'}
                   </span>
                   <span>{isPlayingAudio ? 'Pause Replay' : 'Replay Audio Defense'}</span>
+                </button>
+                <button
+                  onClick={() => setIsLiveDefending(!isLiveDefending)}
+                  className="h-10 px-4 rounded-full bg-[#e8f0fe] hover:bg-[#d2e3fc] text-[#1a73e8] border border-[#c2e7ff] text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs"
+                >
+                  <span className="material-symbols-outlined text-[18px]">mic</span>
+                  <span>{isLiveDefending ? 'Close Voice Input' : 'Deliver Live Oral Answer'}</span>
                 </button>
                 <button
                   onClick={() => setIsRubricOpen(!isRubricOpen)}
@@ -451,7 +564,7 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
               <div className="flex flex-col text-right">
                 <span className="text-[10px] text-[#727785] uppercase">Verified Authenticity</span>
                 <span className="font-semibold text-[#1a1b1e]">Autonomous Evaluator</span>
-                <span className="text-[10px] text-[#006d3a] font-mono mt-0.5">Hash: #8a3f...d9e1</span>
+                <span className="text-[10px] text-[#006d3a] font-mono mt-0.5">Hash: #{certificateHash.slice(-8)}</span>
               </div>
             </div>
 
@@ -473,6 +586,19 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
             </div>
           </div>
 
+          {/* Social / Sync Toast */}
+          {socialToast && (
+            <div className="p-3 rounded-xl bg-[#e6f4ea] border border-[#ceead6] text-[#137333] text-xs flex items-center justify-between animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">verified</span>
+                <span>{socialToast}</span>
+              </div>
+              <button onClick={() => setSocialToast(null)} className="text-[#137333] hover:opacity-75">
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            </div>
+          )}
+
           {/* Action Export Buttons */}
           <div className="flex flex-col gap-2">
             <button
@@ -484,14 +610,20 @@ export const OralDefenseView: React.FC<OralDefenseViewProps> = ({ onBackToPlayer
             </button>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => alert('Certificate credential badge ready for LinkedIn Profile Sync!')}
+                onClick={() => {
+                  setSocialToast('Certificate credential badge verified and prepared for LinkedIn Sync!');
+                  setTimeout(() => setSocialToast(null), 3500);
+                }}
                 className="h-10 px-3 rounded-full bg-[#f4f3f7] hover:bg-[#efedf1] text-[#1a1b1e] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
               >
                 <span className="material-symbols-outlined text-[18px] text-[#0A66C2]">share</span>
                 <span>Add to LinkedIn</span>
               </button>
               <button
-                onClick={() => alert('Certificate Gist verified and committed to GitHub profile repository!')}
+                onClick={() => {
+                  setSocialToast('Certificate Gist verified and committed to GitHub profile repository!');
+                  setTimeout(() => setSocialToast(null), 3500);
+                }}
                 className="h-10 px-3 rounded-full bg-[#f4f3f7] hover:bg-[#efedf1] text-[#1a1b1e] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
               >
                 <span className="material-symbols-outlined text-[18px]">terminal</span>
